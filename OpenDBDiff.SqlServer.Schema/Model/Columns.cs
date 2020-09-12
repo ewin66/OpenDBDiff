@@ -37,10 +37,16 @@ namespace OpenDBDiff.SqlServer.Schema.Model
 
         public override SQLScriptList ToSqlDiff(System.Collections.Generic.ICollection<ISchemaBase> schemas)
         {
+            Boolean ToSqlDiffOption = false; ////zjh
             string sqlDrop = "";
             string sqlAdd = "";
             string sqlCons = "";
             string sqlBinds = "";
+
+            string sqlDropGO = "";         ////zjh
+            string sqlAddGO = "";
+            string sqlConsGO = "";
+            string sqlBindsGO = "";
             SQLScriptList list = new SQLScriptList();
             if (Parent.Status != ObjectStatus.Rebuild)
             {
@@ -91,14 +97,42 @@ namespace OpenDBDiff.SqlServer.Schema.Model
                         if (item.DefaultConstraint != null)
                             list.AddRange(item.DefaultConstraint.ToSqlDiff(schemas));
                     }
-                });
-                if (!String.IsNullOrEmpty(sqlDrop))
-                    sqlDrop = "ALTER TABLE " + Parent.FullName + " DROP COLUMN " + sqlDrop.Substring(0, sqlDrop.Length - 1) + "\r\nGO\r\n";
-                if (!String.IsNullOrEmpty(sqlAdd))
-                    sqlAdd = "ALTER TABLE " + Parent.FullName + " ADD " + sqlAdd.Substring(0, sqlAdd.Length - 1) + "\r\nGO\r\n";
+                    if (ToSqlDiffOption == false)  ////zjh
+                    {
+                        if (sqlAdd.Contains("xxxxxxxx"))
+                        {
+                            //Detect
+                        }
+                        if (!String.IsNullOrEmpty(sqlDrop))
+                            sqlDropGO = "ALTER TABLE " + Parent.FullName + " DROP COLUMN " + sqlDrop.Substring(0, sqlDrop.Length - 1) + "\r\nGO\r\n";
+                        if (!String.IsNullOrEmpty(sqlAdd))
+                            sqlAddGO = "ALTER TABLE " + Parent.FullName + " ADD " + sqlAdd.Substring(0, sqlAdd.Length - 1) + "\r\nGO\r\n";
 
-                if (!String.IsNullOrEmpty(sqlDrop + sqlAdd + sqlCons + sqlBinds))
-                    list.Add(sqlDrop + sqlAdd + sqlBinds, 0, ScriptAction.AlterTable);
+                        if (!String.IsNullOrEmpty(sqlDropGO + sqlAddGO + sqlCons + sqlBinds))
+                            list.Add(sqlDropGO + sqlAddGO + sqlBinds, 0, ScriptAction.AlterTable);
+                        sqlDrop = String.Empty;
+                        sqlAdd = String.Empty;
+                        sqlDropGO = String.Empty;
+                        sqlAddGO = String.Empty;
+                    }
+                });
+
+                if (ToSqlDiffOption == false) ////zjh
+                {
+                    sqlBinds = String.Empty;
+                    sqlCons = String.Empty;
+                    sqlDropGO = String.Empty;
+                    sqlAddGO = String.Empty;
+                    sqlCons = String.Empty;
+                    sqlBinds = String.Empty;
+                }
+                if (!String.IsNullOrEmpty(sqlDrop))
+                    sqlDropGO = "ALTER TABLE " + Parent.FullName + " DROP COLUMN " + sqlDrop.Substring(0, sqlDrop.Length - 1) + "\r\nGO\r\n";
+                if (!String.IsNullOrEmpty(sqlAdd))
+                    sqlAddGO = "ALTER TABLE " + Parent.FullName + " ADD " + sqlAdd.Substring(0, sqlAdd.Length - 1) + "\r\nGO\r\n";
+
+                if (!String.IsNullOrEmpty(sqlDropGO + sqlAddGO + sqlCons + sqlBinds))
+                    list.Add(sqlDropGO + sqlAddGO + sqlBinds, 0, ScriptAction.AlterTable);
             }
             else
             {
